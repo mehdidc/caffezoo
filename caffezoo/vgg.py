@@ -115,19 +115,31 @@ class VGG(object):
 
     def __init__(self, layer_names=None,
                  aggregate_function=concat,
-                 model_filename=MODEL_FILENAME):
+                 model_filename=MODEL_FILENAME,
+                 batch_size=100):
         if layer_names is None:
             layer_names = ["pool3"]
         self.layer_names = layer_names
         self.model_filename = model_filename
         self.mean_value = None
         self.aggregate_function = aggregate_function
+        self.batch_size = batch_size
 
         self._loaded = False
         self._predict_layers = None
 
     def transform(self, X):
-        return self.aggregate_function(self._predict_layers(preprocess(X, self.mean_value)))
+        nb_batches = X.shape[0] / self.batch_size
+        if (X.shape[0] % self.batch_size):
+            nb_batches += 1
+        last = 0
+        O = []
+        for i in range(nb_batches):
+            first = last
+            last += self.batch_size
+            O.append(self.aggregate_function(self._predict_layers(preprocess(X[first:last], self.mean_value))))
+        return np.concatenate(O, axis=0)
+
 
     def fit(self, X, y=None):
         self._load()
@@ -151,3 +163,4 @@ class VGG(object):
 
         self._loaded = True
         self.all_layer_names = net.keys()
+        self._net = net

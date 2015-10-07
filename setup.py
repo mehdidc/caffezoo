@@ -9,5 +9,5 @@ setup(
     license="BSD",
     keywords="",
     url="",
-    packages=["caffezoo", ""],
+    packages=["caffezoo"],
 )

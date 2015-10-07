@@ -25,10 +25,11 @@ from lasagne.layers import GlobalPoolLayer
 from lasagne.layers.dnn import Conv2DDNNLayer as ConvLayer
 from lasagne.layers.dnn import MaxPool2DDNNLayer as PoolLayer
 
-#from lasagne.layers.conv import Conv2DLayer as ConvLayer
-#
 #from lasagne.layers.corrmm import Conv2DMMLayer as ConvLayer
+#from lasagne.layers.pool import MaxPool2DLayer as PoolLayer
+
 from lasagne.layers import Pool2DLayer as PoolLayerDefault
+
 
 from lasagne.layers import LocalResponseNormalization2DLayer as LRNLayer
 from lasagne.nonlinearities import softmax, linear, rectify
@@ -147,19 +148,30 @@ class GoogleNet(object):
 
     def __init__(self, layer_names=None,
                  aggregate_function=concat,
-                 model_filename=MODEL_FILENAME):
+                 model_filename=MODEL_FILENAME,
+                 batch_size=100):
         if layer_names is None:
             layer_names = ["inception_3b/output"]
         self.layer_names = layer_names
         self.model_filename = model_filename
         self.mean_value = None
         self.aggregate_function = aggregate_function
+        self.batch_size = batch_size
 
         self._loaded = False
         self._predict_layers = None
 
     def transform(self, X):
-        return self.aggregate_function(self._predict_layers(preprocess(X, self.mean_value)))
+        nb_batches = X.shape[0] / self.batch_size
+        if (X.shape[0] % self.batch_size):
+            nb_batches += 1
+        last = 0
+        O = []
+        for i in range(nb_batches):
+            first = last
+            last += self.batch_size
+            O.append(self.aggregate_function(self._predict_layers(preprocess(X[first:last], self.mean_value))))
+        return np.concatenate(O, axis=0)
 
     def fit(self, X, y=None):
         self._load()
@@ -183,3 +195,4 @@ class GoogleNet(object):
 
         self._loaded = True
         self.all_layer_names = net.keys()
+        self._net = net
