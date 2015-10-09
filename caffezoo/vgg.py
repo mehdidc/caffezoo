@@ -33,6 +33,8 @@ import numpy as np
 from lasagne.nonlinearities import linear, rectify
 from lasagne.layers import NonlinearityLayer
 
+from skimage.transform import resize
+
 def build_model(pool_mode='max'):
     net = OrderedDict()
     net['input'] = InputLayer((None, 3, 224, 224), name='input')
@@ -104,7 +106,8 @@ def build_model(pool_mode='max'):
     return net
 
 def concat(layers):
-    return np.concatenate([layer.reshape((layer.shape[0], np.prod(layer.shape[1:]))) for layer in layers], axis=1)
+    layers = [layer.reshape((layer.shape[0], np.prod(layer.shape[1:]))) for layer in layers]
+    return np.concatenate(layers, axis=1)
 
 def preprocess(mv, img):
     return (img-mv).transpose((0, 3, 1, 2)).astype(np.float32)
@@ -137,7 +140,12 @@ class VGG(object):
         for i in range(nb_batches):
             first = last
             last += self.batch_size
-            O.append(self.aggregate_function(self._predict_layers(preprocess(X[first:last], self.mean_value))))
+
+            X_batch = X[first:last]
+            X_batch_rescaled = np.empty(size=(X_batch.shape[0], 224, 224, 3))
+            for j in range(X_batch):
+                X_batch_rescaled[j] = resize(X_batch[j], (224, 244), preserve_range=True)
+            O.append(self.aggregate_function(self._predict_layers(preprocess(X_batch_rescaled, self.mean_value))))
         return np.concatenate(O, axis=0)
 
 
