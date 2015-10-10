@@ -152,7 +152,7 @@ class GoogleNet(object):
     def __init__(self, layer_names=None,
                  aggregate_function=concat,
                  model_filename=MODEL_FILENAME,
-                 batch_size=100):
+                 batch_size=100, resize=(224, 224)):
         if layer_names is None:
             layer_names = ["inception_3b/output"]
         self.layer_names = layer_names
@@ -160,6 +160,7 @@ class GoogleNet(object):
         self.mean_value = None
         self.aggregate_function = aggregate_function
         self.batch_size = batch_size
+        self.resize = resize
 
         self._loaded = False
         self._predict_layers = None
@@ -175,11 +176,12 @@ class GoogleNet(object):
             last += self.batch_size
 
             X_batch = X[first:last]
-            X_batch_rescaled = np.empty(size=(X_batch.shape[0], 224, 224, 3))
-            for j in range(X_batch):
-                X_batch_rescaled[j] = resize(X_batch[j], (224, 244), preserve_range=True)
+            X_batch_rescaled = np.empty((X_batch.shape[0], self.resize[0], self.resize[1], 3))
+            for j in range(X_batch.shape[1]):
+                X_batch_rescaled[j] = resize(X_batch[j], (self.resize[0], self.resize[1]), preserve_range=True)
             O.append(self.aggregate_function(self._predict_layers(preprocess(X_batch_rescaled, self.mean_value))))
         return np.concatenate(O, axis=0)
+
 
     def fit(self, X, y=None):
         self._load()
