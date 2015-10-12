@@ -21,9 +21,12 @@ from lasagne.layers import ConcatLayer
 from lasagne.layers import NonlinearityLayer
 from lasagne.layers import GlobalPoolLayer
 
-
-from lasagne.layers.dnn import Conv2DDNNLayer as ConvLayer
-from lasagne.layers.dnn import MaxPool2DDNNLayer as PoolLayer
+try:
+    from lasagne.layers.dnn import Conv2DDNNLayer as ConvLayer
+    from lasagne.layers.dnn import MaxPool2DDNNLayer as PoolLayer
+except Exception:
+    from lasagne.layers.corrmm import Conv2DMMLayer as ConvLayer
+    from lasagne.layers import Pool2DLayer as PoolLayer
 
 #from lasagne.layers.corrmm import Conv2DMMLayer as ConvLayer
 #from lasagne.layers.pool import MaxPool2DLayer as PoolLayer

@@ -12,11 +12,12 @@ from lasagne.layers import InputLayer, DenseLayer, NonlinearityLayer
 #from lasagne.layers.conv import Conv2DLayer as ConvLayer
 #from lasagne.layers import Pool2DLayer as PoolLayer
 
-#from lasagne.layers.corrmm import Conv2DMMLayer as ConvLayer
-#from lasagne.layers import Pool2DLayer as PoolLayer
-
-from lasagne.layers.dnn import Conv2DDNNLayer as ConvLayer
-from lasagne.layers.dnn import MaxPool2DDNNLayer as PoolLayer
+try:
+    from lasagne.layers.dnn import Conv2DDNNLayer as ConvLayer
+    from lasagne.layers.dnn import MaxPool2DDNNLayer as PoolLayer
+except Exception:
+    from lasagne.layers.corrmm import Conv2DMMLayer as ConvLayer
+    from lasagne.layers import Pool2DLayer as PoolLayer
 
 from lasagne.nonlinearities import softmax
 
