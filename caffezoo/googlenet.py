@@ -207,7 +207,7 @@ class GoogleNet(object):
 
         X = T.tensor4()
         layer_values = [layers.get_output(net[layer], X) for layer in self.layer_names]
-        #self._predict_layers =  theano.function([X], layer_values)
+        self._predict_layers =  theano.function([X], layer_values)
 
         self._loaded = True
         self.all_layer_names = net.keys()
