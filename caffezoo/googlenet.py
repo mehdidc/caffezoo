@@ -180,7 +180,7 @@ class GoogleNet(object):
             last += self.batch_size
 
             X_batch = X[first:last]
-            if self.resize is not False:
+            if self.resize != False:
                 X_batch_rescaled = np.empty((X_batch.shape[0], self.resize[0], self.resize[1], 3))
                 for j in range(X_batch.shape[1]):
                     X_batch_rescaled[j] = resize(X_batch[j], (self.resize[0], self.resize[1]), preserve_range=True)
