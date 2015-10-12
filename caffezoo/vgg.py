@@ -103,6 +103,8 @@ def build_model(pool_mode='max'):
     net['fc7'] = DenseLayer(net['fc6'], num_units=4096, name="fc7")
     net['fc8'] = DenseLayer(net['fc7'], num_units=1000, nonlinearity=None, name="fc8")
     net['prob'] = NonlinearityLayer(net['fc8'], softmax, name="prob")
+    for k, v in net.items():
+        net[k].name = k
     return net
 
 def concat(layers):
@@ -171,7 +173,7 @@ class VGG(object):
 
         X = T.tensor4()
         layer_values = [layers.get_output(net[layer], X) for layer in self.layer_names]
-        self._predict_layers =  theano.function([X], layer_values)
+        #self._predict_layers =  theano.function([X], layer_values)
 
         self._loaded = True
         self.all_layer_names = net.keys()
