@@ -68,13 +68,7 @@ def build_inception_module(name, input_layer, nfilters, pool_mode='max'):
         net['3x3/relu'],
         net['5x5/relu'],
         net['pool_proj'],
-<<<<<<< HEAD
-    ])
-
-=======
         ])
-    
->>>>>>> ebfcb37f99b4a34e565495869b7caef3bce578ab
     return {'{}/{}'.format(name, k): v for k, v in net.items()}
 
 
@@ -183,11 +177,16 @@ class GoogleNet(object):
             last += self.batch_size
 
             X_batch = X[first:last]
-            X_batch_rescaled = np.empty((X_batch.shape[0], self.resize[0], self.resize[1], 3))
-            for j in range(X_batch.shape[1]):
-                X_batch_rescaled[j] = resize(X_batch[j], (self.resize[0], self.resize[1]), preserve_range=True)
+            if self.resize is not False:
+                X_batch_rescaled = np.empty((X_batch.shape[0], self.resize[0], self.resize[1], 3))
+                for j in range(X_batch.shape[1]):
+                    X_batch_rescaled[j] = resize(X_batch[j], (self.resize[0], self.resize[1]), preserve_range=True)
+            else:
+                X_batch_rescaled = X_batch
             O.append(self.aggregate_function(self._predict_layers(preprocess(X_batch_rescaled, self.mean_value))))
         return np.concatenate(O, axis=0)
+
+
 
 
     def fit(self, X, y=None):
