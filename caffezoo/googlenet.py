@@ -65,7 +65,7 @@ def build_inception_module(name, input_layer, nfilters, pool_mode='max'):
         net['5x5/relu'],
         net['pool_proj'],
         ])
-
+    
     return {'{}/{}'.format(name, k): v for k, v in net.items()}
 
 
@@ -132,6 +132,8 @@ def build_model(pool_mode='max'):
                                          nonlinearity=linear)
     net['prob'] = NonlinearityLayer(net['loss3/classifier'],
                                     nonlinearity=softmax)
+    for k, v in net.items():
+        net[k].name = k
     return net
 
 
@@ -191,7 +193,7 @@ class GoogleNet(object):
 
         X = T.tensor4()
         layer_values = [layers.get_output(net[layer], X) for layer in self.layer_names]
-        self._predict_layers =  theano.function([X], layer_values)
+        #self._predict_layers =  theano.function([X], layer_values)
 
         self._loaded = True
         self.all_layer_names = net.keys()
