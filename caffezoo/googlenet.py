@@ -183,12 +183,9 @@ class GoogleNet(object):
             last += self.batch_size
 
             X_batch = X[first:last]
-            if resize is not False:
-                X_batch_rescaled = np.empty((X_batch.shape[0], self.resize[0], self.resize[1], 3))
-                for j in range(X_batch.shape[1]):
-                    X_batch_rescaled[j] = resize(X_batch[j], (self.resize[0], self.resize[1]), preserve_range=True)
-            else:
-                X_batch_rescaled = X_batch
+            X_batch_rescaled = np.empty((X_batch.shape[0], self.resize[0], self.resize[1], 3))
+            for j in range(X_batch.shape[1]):
+                X_batch_rescaled[j] = resize(X_batch[j], (self.resize[0], self.resize[1]), preserve_range=True)
             O.append(self.aggregate_function(self._predict_layers(preprocess(X_batch_rescaled, self.mean_value))))
         return np.concatenate(O, axis=0)
 
