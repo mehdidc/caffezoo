@@ -42,6 +42,7 @@ from collections import OrderedDict
 from skimage.transform import resize
 
 
+from .base import BaseModel
 
 #from theano.sandbox.cuda.blas import GpuCorrMM
 
@@ -75,9 +76,11 @@ def build_inception_module(name, input_layer, nfilters, pool_mode='max'):
     return {'{}/{}'.format(name, k): v for k, v in net.items()}
 
 
-def build_model(pool_mode='max'):
+def build_model(pool_mode='max', input_size=None):
     net = OrderedDict()
-    net['input'] = InputLayer((None, 3, None, None), name="input")
+    if input_size is None:
+        input_size = (None, None)
+    net['input'] = InputLayer((None, 3, input_size[0], input_size[1]), name="input")
     net['conv1/7x7_s2'] = ConvLayer(net['input'], 64, 7, stride=2, pad=3,
                                     nonlinearity=linear)
 
@@ -143,75 +146,9 @@ def build_model(pool_mode='max'):
     return net
 
 
-def concat(layers):
-    layers = [layer.reshape((layer.shape[0], np.prod(layer.shape[1:]))) for layer in layers]
-    return np.concatenate(layers, axis=1)
+class GoogleNet(BaseModel):
+    default_filename = "/home/mcherti/work/data/zoo/blvc_googlenet.pkl"
+    default_layers = ["prob"]
 
-def preprocess(mv, img):
-    return (img-mv).transpose((0, 3, 1, 2)).astype(np.float32)
-
-class GoogleNet(object):
-    MODEL_FILENAME = "/home/mcherti/work/data/zoo/blvc_googlenet.pkl"
-
-    def __init__(self, layer_names=None,
-                 aggregate_function=concat,
-                 model_filename=MODEL_FILENAME,
-                 batch_size=100, resize=(224, 224)):
-        if layer_names is None:
-            layer_names = ["inception_3b/output"]
-        self.layer_names = layer_names
-        self.model_filename = model_filename
-        self.mean_value = None
-        self.aggregate_function = aggregate_function
-        self.batch_size = batch_size
-        self.resize = resize
-
-        self._loaded = False
-        self._predict_layers = None
-
-    def transform(self, X):
-        nb_batches = X.shape[0] / self.batch_size
-        if (X.shape[0] % self.batch_size):
-            nb_batches += 1
-        last = 0
-        O = []
-        for i in range(nb_batches):
-            first = last
-            last += self.batch_size
-
-            X_batch = X[first:last]
-            if self.resize != False:
-                X_batch_rescaled = np.empty((X_batch.shape[0], self.resize[0], self.resize[1], 3))
-                for j in range(X_batch.shape[1]):
-                    X_batch_rescaled[j] = resize(X_batch[j], (self.resize[0], self.resize[1]), preserve_range=True)
-            else:
-                X_batch_rescaled = X_batch
-            O.append(self.aggregate_function(self._predict_layers(preprocess(X_batch_rescaled, self.mean_value))))
-        return np.concatenate(O, axis=0)
-
-
-
-
-    def fit(self, X, y=None):
-        self._load()
-        return self
-
-    def _load(self):
-        net = build_model()
-        model_data = pickle.load(open(self.model_filename))
-        values = model_data['param values']
-        layers.set_all_param_values(net['prob'], values)
-
-        if "mean value" in model_data:
-            mean_value = (model_data["mean value"])
-        else:
-            mean_value = np.array([104.0, 116.0, 122.0])
-        self.mean_value = mean_value
-
-        X = T.tensor4()
-        layer_values = [layers.get_output(net[layer], X) for layer in self.layer_names]
-        self._predict_layers =  theano.function([X], layer_values)
-
-        self._loaded = True
-        self.all_layer_names = net.keys()
-        self._net = net
+    def _build_model(self, input_size):
+        return build_model(input_size=input_size)

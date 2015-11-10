@@ -32,9 +32,10 @@ import theano
 import numpy as np
 
 from lasagne.nonlinearities import linear, rectify
-from lasagne.layers import NonlinearityLayer
 
 from skimage.transform import resize
+
+from .base import BaseModel
 
 def build_model(pool_mode='max'):
     net = OrderedDict()
@@ -108,74 +109,10 @@ def build_model(pool_mode='max'):
         net[k].name = k
     return net
 
-def concat(layers):
-    layers = [layer.reshape((layer.shape[0], np.prod(layer.shape[1:]))) for layer in layers]
-    return np.concatenate(layers, axis=1)
 
-def preprocess(mv, img):
-    return (img-mv).transpose((0, 3, 1, 2)).astype(np.float32)
+class VGG(BaseModel):
+    default_filename = "/home/mcherti/work/data/zoo/vgg19.pkl"
+    default_layers = ["pool3"]
 
-
-class VGG(object):
-    MODEL_FILENAME = "/home/mcherti/work/data/zoo/vgg19.pkl"
-
-    def __init__(self, layer_names=None,
-                 aggregate_function=concat,
-                 model_filename=MODEL_FILENAME,
-                 batch_size=100, resize=(224, 224)):
-        if layer_names is None:
-            layer_names = ["pool3"]
-        self.layer_names = layer_names
-        self.model_filename = model_filename
-        self.mean_value = None
-        self.aggregate_function = aggregate_function
-        self.batch_size = batch_size
-        self.resize = resize
-
-        self._loaded = False
-        self._predict_layers = None
-
-    def transform(self, X):
-        nb_batches = X.shape[0] / self.batch_size
-        if (X.shape[0] % self.batch_size):
-            nb_batches += 1
-        last = 0
-        O = []
-        for i in range(nb_batches):
-            first = last
-            last += self.batch_size
-
-            X_batch = X[first:last]
-            if self.resize != False:
-                X_batch_rescaled = np.empty((X_batch.shape[0], self.resize[0], self.resize[1], 3))
-                for j in range(X_batch.shape[1]):
-                    X_batch_rescaled[j] = resize(X_batch[j], (self.resize[0], self.resize[1]), preserve_range=True)
-            else:
-                X_batch_rescaled = X_batch
-            O.append(self.aggregate_function(self._predict_layers(preprocess(X_batch_rescaled, self.mean_value))))
-        return np.concatenate(O, axis=0)
-
-
-    def fit(self, X, y=None):
-        self._load()
-        return self
-
-    def _load(self):
-        net = build_model()
-        model_data = pickle.load(open(self.model_filename))
-        values = model_data['param values']
-        layers.set_all_param_values(net['prob'], values)
-
-        if "mean value" in model_data:
-            mean_value = (model_data["mean value"])
-        else:
-            mean_value = np.array([104.0, 116.0, 122.0])
-        self.mean_value = mean_value
-
-        X = T.tensor4()
-        layer_values = [layers.get_output(net[layer], X) for layer in self.layer_names]
-        self._predict_layers =  theano.function([X], layer_values)
-
-        self._loaded = True
-        self.all_layer_names = net.keys()
-        self._net = net
+    def _build_model(self, input_size):
+        return build_model()
