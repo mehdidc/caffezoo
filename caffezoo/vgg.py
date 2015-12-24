@@ -9,8 +9,8 @@
 from lasagne.layers import InputLayer, DenseLayer, NonlinearityLayer
 
 
-#from lasagne.layers.conv import Conv2DLayer as ConvLayer
-#from lasagne.layers import Pool2DLayer as PoolLayer
+# from lasagne.layers.conv import Conv2DLayer as ConvLayer
+# from lasagne.layers import Pool2DLayer as PoolLayer
 
 try:
     from lasagne.layers.dnn import Conv2DDNNLayer as ConvLayer
@@ -23,19 +23,10 @@ from lasagne.nonlinearities import softmax
 
 from collections import OrderedDict
 
-import cPickle as pickle
-
-from lasagne import layers
-
-import theano.tensor as T
-import theano
-import numpy as np
-
 from lasagne.nonlinearities import linear, rectify
 
-from skimage.transform import resize
-
 from .base import BaseModel
+
 
 def build_model(pool_mode='max'):
     net = OrderedDict()
@@ -60,50 +51,52 @@ def build_model(pool_mode='max'):
     net['conv3_1'] = ConvLayer(net['pool2'], 256, 3, pad=1, name="conv3_1", nonlinearity=linear)
     net['conv3_1/relu'] = NonlinearityLayer(net['conv3_1'], nonlinearity=rectify)
 
-    net['conv3_2'] = ConvLayer(net['conv3_1/relu'], 256, 3, pad=1, name="conv3_2")
+    net['conv3_2'] = ConvLayer(net['conv3_1/relu'], 256, 3, pad=1, name="conv3_2", nonlinearity=linear)
     net['conv3_2/relu'] = NonlinearityLayer(net['conv3_2'], nonlinearity=rectify)
 
-    net['conv3_3'] = ConvLayer(net['conv3_2/relu'], 256, 3, pad=1, name="conv3_3")
+    net['conv3_3'] = ConvLayer(net['conv3_2/relu'], 256, 3, pad=1, name="conv3_3", nonlinearity=linear)
     net['conv3_3/relu'] = NonlinearityLayer(net['conv3_3'], nonlinearity=rectify)
 
 
-    net['conv3_4'] = ConvLayer(net['conv3_3/relu'], 256, 3, pad=1, name="conv3_4")
+    net['conv3_4'] = ConvLayer(net['conv3_3/relu'], 256, 3, pad=1, name="conv3_4", nonlinearity=linear)
     net['conv3_4/relu'] = NonlinearityLayer(net['conv3_4'], nonlinearity=rectify)
 
 
     net['pool3'] = PoolLayer(net['conv3_4/relu'], 2, name="pool3")
 
-    net['conv4_1'] = ConvLayer(net['pool3'], 512, 3, pad=1, name="conv4_1")
+    net['conv4_1'] = ConvLayer(net['pool3'], 512, 3, pad=1, name="conv4_1", nonlinearity=linear)
     net['conv4_1/relu'] = NonlinearityLayer(net['conv4_1'], nonlinearity=rectify)
 
-    net['conv4_2'] = ConvLayer(net['conv4_1/relu'], 512, 3, pad=1, name="conv4_2")
+    net['conv4_2'] = ConvLayer(net['conv4_1/relu'], 512, 3, pad=1, name="conv4_2", nonlinearity=linear)
     net['conv4_2/relu'] = NonlinearityLayer(net['conv4_2'], nonlinearity=rectify)
 
-    net['conv4_3'] = ConvLayer(net['conv4_2/relu'], 512, 3, pad=1, name="conv4_3")
+    net['conv4_3'] = ConvLayer(net['conv4_2/relu'], 512, 3, pad=1, name="conv4_3", nonlinearity=linear)
     net['conv4_3/relu'] = NonlinearityLayer(net['conv4_3'], nonlinearity=rectify)
 
-    net['conv4_4'] = ConvLayer(net['conv4_3/relu'], 512, 3, pad=1, name="conv4_4")
+    net['conv4_4'] = ConvLayer(net['conv4_3/relu'], 512, 3, pad=1, name="conv4_4", nonlinearity=linear)
     net['conv4_4/relu'] = NonlinearityLayer(net['conv4_4'], nonlinearity=rectify)
 
     net['pool4'] = PoolLayer(net['conv4_4/relu'], 2, name="pool4")
 
-    net['conv5_1'] = ConvLayer(net['pool4'], 512, 3, pad=1, name="conv5_1")
+    net['conv5_1'] = ConvLayer(net['pool4'], 512, 3, pad=1, name="conv5_1", nonlinearity=linear)
     net['conv5_1/relu'] = NonlinearityLayer(net['conv5_1'], nonlinearity=rectify)
 
-    net['conv5_2'] = ConvLayer(net['conv5_1/relu'], 512, 3, pad=1, name="conv5_2")
+    net['conv5_2'] = ConvLayer(net['conv5_1/relu'], 512, 3, pad=1, name="conv5_2", nonlinearity=linear)
     net['conv5_2/relu'] = NonlinearityLayer(net['conv5_2'], nonlinearity=rectify)
 
-    net['conv5_3'] = ConvLayer(net['conv5_2/relu'], 512, 3, pad=1, name="conv5_3")
+    net['conv5_3'] = ConvLayer(net['conv5_2/relu'], 512, 3, pad=1, name="conv5_3", nonlinearity=linear)
     net['conv5_3/relu'] = NonlinearityLayer(net['conv5_3'], nonlinearity=rectify)
 
-    net['conv5_4'] = ConvLayer(net['conv5_3/relu'], 512, 3, pad=1, name="conv5_4")
+    net['conv5_4'] = ConvLayer(net['conv5_3/relu'], 512, 3, pad=1, name="conv5_4", nonlinearity=linear)
     net['conv5_4/relu'] = NonlinearityLayer(net['conv5_4'], nonlinearity=rectify)
 
     net['pool5'] = PoolLayer(net['conv5_4/relu'], 2, name="pool5")
 
-    net['fc6'] = DenseLayer(net['pool5'], num_units=4096, name="fc6")
-    net['fc7'] = DenseLayer(net['fc6'], num_units=4096, name="fc7")
-    net['fc8'] = DenseLayer(net['fc7'], num_units=1000, nonlinearity=None, name="fc8")
+    net['fc6'] = DenseLayer(net['pool5'], num_units=4096, name="fc6", nonlinearity=linear)
+    net['fc6/relu'] = NonlinearityLayer(net['fc6'], nonlinearity=rectify)
+    net['fc7'] = DenseLayer(net['fc6/relu'], num_units=4096, name="fc7", nonlinearity=linear)
+    net['fc7/relu'] = NonlinearityLayer(net['fc7'], nonlinearity=rectify)
+    net['fc8'] = DenseLayer(net['fc7/relu'], num_units=1000, nonlinearity=linear, name="fc8")
     net['prob'] = NonlinearityLayer(net['fc8'], softmax, name="prob")
     for k, v in net.items():
         net[k].name = k
