@@ -12,10 +12,12 @@ def concat(layers):
 
 
 def preprocess(mv, img):
+    img = img[:, :, :, ::-1]
     return (img-mv).transpose((0, 3, 1, 2)).astype(np.float32)
 
 
 def deprocess(mv, img):
+    img = img[:, ::-1, :, :]
     (img + mv).transpose((0, 2, 3, 1)).astype(np.float32)
 
 

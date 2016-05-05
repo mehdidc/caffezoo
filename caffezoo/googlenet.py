@@ -25,7 +25,10 @@ try:
     from lasagne.layers.dnn import Conv2DDNNLayer as ConvLayer
     from lasagne.layers.dnn import MaxPool2DDNNLayer as PoolLayer
 except Exception:
-    from lasagne.layers.corrmm import Conv2DMMLayer as ConvLayer
+    try:
+        from lasagne.layers.corrmm import Conv2DMMLayer as ConvLayer
+    except Exception:
+        from lasagne.layers import Conv2DLayer as ConvLayer
     from lasagne.layers import Pool2DLayer as PoolLayer
 
 #from lasagne.layers.corrmm import Conv2DMMLayer as ConvLayer
@@ -147,7 +150,7 @@ def build_model(pool_mode='max', input_size=None):
 
 
 class GoogleNet(BaseModel):
-    default_filename = "/home/mcherti/work/data/zoo/blvc_googlenet.pkl"
+    default_filename = os.path.join(os.getenv("DATA_PATH"), "zoo", "blvc_googlenet.pkl")
     default_layers = ["prob"]
 
     def _build_model(self, input_size):

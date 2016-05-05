@@ -5,6 +5,7 @@
 
 # Download pretrained weights from:
 # https://s3.amazonaws.com/lasagne/recipes/pretrained/imagenet/vgg19.pkl
+import os
 
 from lasagne.layers import InputLayer, DenseLayer, NonlinearityLayer
 
@@ -16,8 +17,13 @@ try:
     from lasagne.layers.dnn import Conv2DDNNLayer as ConvLayer
     from lasagne.layers.dnn import MaxPool2DDNNLayer as PoolLayer
 except Exception:
-    from lasagne.layers.corrmm import Conv2DMMLayer as ConvLayer
+    try:
+        from lasagne.layers.corrmm import Conv2DMMLayer as ConvLayer
+    except Exception:
+        from lasagne.layers import Conv2DLayer as ConvLayer
     from lasagne.layers import Pool2DLayer as PoolLayer
+
+
 
 from lasagne.nonlinearities import softmax
 
@@ -104,7 +110,7 @@ def build_model(pool_mode='max'):
 
 
 class VGG(BaseModel):
-    default_filename = "/home/mcherti/work/data/zoo/vgg19.pkl"
+    default_filename = os.path.join(os.getenv("DATA_PATH"), "zoo", "vgg19.pkl")
     default_layers = ["pool3"]
 
     def _build_model(self, input_size):
